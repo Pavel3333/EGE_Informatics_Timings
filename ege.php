@@ -1,11 +1,82 @@
-<?
-  //Скрипт для проверки  своих таймингов при решении пробников ЕГЭ по информатике и сравнивания их с рекомендуемыми таймингами
+﻿<?
+    //Скрипт для проверки своих таймингов при решении пробников ЕГЭ  и сравнивания их с рекомендуемыми таймингами. Поддерживается работа с пробниками по математике (профильного уровня) и информатике.
+
+    //Поддерживается как решение только задач первой части (1-23 задания), так и полное решение пробника (1-27).
+    //Все данные отправляются на свой сервер и записываются в БД.
   
-  //Поддерживается как решение только задач первой части (1-23 задания), так и полное решение пробника (1-27)
+  $type = '';
   
-  //Автор - Павел Ушаев aka Pavel3333
+  if(isset($_GET['type'])) {
+    $type = $_GET['type'];
+    if($type !== 'inf' && $type !== 'math') exit();
+  }
+  else exit();
   
-  $timing_eth = [
+  $need_part_2 = TRUE;
+  
+  if(isset($_GET['need_part_2'])) {
+    $need_part = $_GET['need_part_2'];
+    if(is_numeric($need_part)) {
+      if(!$need_part) $need_part_2 = FALSE;
+    }
+    else exit();
+  }
+  
+  $sess = time();
+  
+  $size   = 1;
+  $part_2 = 1;
+  $part_2_diff = 1;
+  $current_timing = 1;
+  
+  if     ($type === 'inf') {
+    $size = 28;
+    $part_2 = 23;
+    $part_2_diff = 90.0;
+    $current_timing = $timing_eth_inf["$i"];
+  }
+  else if($type === 'math') {
+    $size = 20;
+    $part_2 = 12;
+    $part_2_diff = 55.0;
+    $current_timing = $timing_eth_math["$i"];
+  }
+  
+  $query_create_inf_part2 = '';
+  
+  $query_2_inf_part2 = '';
+  $query_3_inf_part2 = '';
+  
+  $query_create_math_part2 = '';
+  
+  $query_2_math_part2 = '';
+  $query_3_math_part2 = '';
+  
+  if(!$need_part_2) $size = $part_2 + 1; 
+  else {
+    $query_create_inf_part2 = '
+    `24` float NOT NULL,
+    `25` float NOT NULL,
+    `26` float NOT NULL,
+    `27` float NOT NULL,';
+    
+    $query_2_inf_part2 = '`24`, `25`, `26`, `27`, ';
+    $query_3_inf_part2 = '`24`, `25`, `26`, `27`, ';
+    
+    $query_create_math_part2 = ' 
+  `13` float NOT NULL,
+  `14` float NOT NULL,
+  `15` float NOT NULL,
+  `16` float NOT NULL,
+  `17` float NOT NULL,
+  `18` float NOT NULL,
+  `19` float NOT NULL,';
+    
+    $query_2_math_part2 = '`13`, `14`, `15`, `16`, `17`, `18`, `19`, ';
+    $query_3_math_part2 = '`13`, `14`, `15`, `16`, `17`, `18`, `19`, ';
+  }
+  
+  $timing_eth_inf = [
   '1'  =>  1.0,
   '2'  =>  3.0,
   '3'  =>  3.0,
@@ -34,9 +105,8 @@
   '26' =>  30.0,
   '27' =>  55.0
   ];
-
-  $sess = time();
-  $query_create = "CREATE TABLE `session_$sess` (
+  
+  $query_create_inf = "CREATE TABLE `session_$sess` (
   `type` varchar(10) NOT NULL,
   `1` float NOT NULL,
   `2` float NOT NULL,
@@ -61,31 +131,81 @@
   `21` float NOT NULL,
   `22` float NOT NULL,
   `23` float NOT NULL,
-  `24` float NOT NULL,
-  `25` float NOT NULL,
-  `26` float NOT NULL,
-  `27` float NOT NULL,
+  $query_create_inf_part2
   `total` float NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 ";
+
+  $query_2_inf = "INSERT INTO `session_$sess` (`type`, `1`, `2`, `3`, `4`, `5`, `6`, `7`, `8`, `9`, `10`, `11`, `12`, `13`, `14`, `15`, `16`, `17`, `18`, `19`, `20`, `21`, `22`, `23`, $query_2_inf_part2 `total`) VALUES ('raw_timing'";
   
-  $query_2 = "INSERT INTO `session_$sess` (`type`, `1`, `2`, `3`, `4`, `5`, `6`, `7`, `8`, `9`, `10`, `11`, `12`, `13`, `14`, `15`, `16`, `17`, `18`, `19`, `20`, `21`, `22`, `23`, `24`, `25`, `26`, `27`, `total`) VALUES ('raw_timing'";
-  $query_3 = "INSERT INTO `session_$sess` (`type`, `1`, `2`, `3`, `4`, `5`, `6`, `7`, `8`, `9`, `10`, `11`, `12`, `13`, `14`, `15`, `16`, `17`, `18`, `19`, `20`, `21`, `22`, `23`, `24`, `25`, `26`, `27`, `total`) VALUES ('difference'";
+  $query_3_inf = "INSERT INTO `session_$sess` (`type`, `1`, `2`, `3`, `4`, `5`, `6`, `7`, `8`, `9`, `10`, `11`, `12`, `13`, `14`, `15`, `16`, `17`, `18`, `19`, `20`, `21`, `22`, `23`, $query_3_inf_part2 `total`) VALUES ('difference'";
   
-  $need_part_2 = TRUE;
+  $timing_eth_math = [
+  '1'  =>  2.0,
+  '2'  =>  2.0,
+  '3'  =>  2.0,
+  '4'  =>  3.0,
+  '5'  =>  3.0,
+  '6'  =>  3.0,
+  '7'  =>  5.0,
+  '8'  =>  5.0,
+  '9'  =>  5.0,
+  '10' =>  5.0,
+  '11' =>  10.0,
+  '12' =>  10.0,
+  '13' =>  10.0,
+  '14' =>  20.0,
+  '15' =>  15.0,
+  '16' =>  25.0,
+  '17' =>  35.0,
+  '18' =>  35.0,
+  '19' =>  40.0
+  ];
   
-  if(isset($_GET['need_part_2'])) {
-    $need_part = $_GET['need_part_2'];
-    if(is_numeric($need_part) && !$need_part) $need_part_2 = FALSE;
-    else exit();
+  $query_create_math = "CREATE TABLE `session_$sess` (
+  `type` varchar(10) NOT NULL,
+  `1` float NOT NULL,
+  `2` float NOT NULL,
+  `3` float NOT NULL,
+  `4` float NOT NULL,
+  `5` float NOT NULL,
+  `6` float NOT NULL,
+  `7` float NOT NULL,
+  `8` float NOT NULL,
+  `9` float NOT NULL,
+  `10` float NOT NULL,
+  `11` float NOT NULL,
+  `12` float NOT NULL,
+  $query_create_math_part2
+  `total` float NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+";
+
+  $query_2_math = "INSERT INTO `session_$sess` (`type`, `1`, `2`, `3`, `4`, `5`, `6`, `7`, `8`, `9`, `10`, `11`, `12`, $query_2_math_part2 `total`) VALUES ('raw_timing'";
+  
+  $query_3_math = "INSERT INTO `session_$sess` (`type`, `1`, `2`, `3`, `4`, `5`, `6`, `7`, `8`, `9`, `10`, `11`, `12`, $query_3_math_part2 `total`) VALUES ('difference'";
+  
+  $query_create = '';
+  $query_2 = '';
+  $query_3 = '';
+  
+  if     ($type === 'inf') {
+    $query_create = $query_create_inf;
+    $query_2      = $query_2_inf;
+    $query_3      = $query_3_inf;
+  }
+  else if($type === 'math') {
+    $query_create = $query_create_math;
+    $query_2      = $query_2_math;
+    $query_3      = $query_3_math;
   }
   
-  for($i = 1; $i < 28; $i++) {
+  for($i = 1; $i < $size; $i++) {
     if(isset($_GET["$i"])) {
       $timing_i = $_GET["$i"];
       if(is_numeric($timing_i)) {
-        $diff_i = round($timing_i - $timing_eth["$i"], 2);
-        if($i > 23 && !$need_part_2) $diff_i = 0.0;
+        $diff_i = round($timing_i - $current_timing,  2);
+        if($i > $part_2 && !$need_part_2) $diff_i = 0.0;
         $query_2 .= ", '$timing_i'";
         $query_3 .= ", '$diff_i'";
       }
@@ -93,11 +213,12 @@
     }
     else exit();
   }
+  
   if(isset($_GET['total'])) {
     $total      = $_GET['total'];
     if(is_numeric($timing_i)) {
       $total_diff = $total - 235.0;
-      if(!$need_part_2) $total_diff = $total - 90.0;
+      if(!$need_part_2) $total_diff = $total - $part_2_diff;
       $query_2 .= ", '$total'";
       $query_3 .= ", '$total_diff'";
     }
@@ -114,8 +235,9 @@
   $mysqli->query($query_create);
   $mysqli->query($query_2);
   $mysqli->query($query_3);
+  
   $mysqli->query("ALTER TABLE `session_$sess` ADD PRIMARY KEY (`type`);");
-  $mysqli->query("INSERT INTO `ege_inf` (`ID_session`, `DBName`, `time`) VALUES (NULL, 'session_$sess', CURRENT_TIMESTAMP);");
+  $mysqli->query("INSERT INTO `ege` (`ID_session`, `DBName`, `type`, `time`) VALUES (NULL, 'session_$sess', '$type', CURRENT_TIMESTAMP);");
   
   $mysqli->close();
 ?>
