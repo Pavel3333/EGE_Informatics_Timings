@@ -1,8 +1,8 @@
 ﻿<?
-    //Скрипт для проверки своих таймингов при решении пробников ЕГЭ  и сравнивания их с рекомендуемыми таймингами. Поддерживается работа с пробниками по математике (профильного уровня) и информатике.
-
-    //Поддерживается как решение только задач первой части (1-23 задания), так и полное решение пробника (1-27).
-    //Все данные отправляются на свой сервер и записываются в БД.
+  //Скрипт для проверки своих таймингов при решении пробников ЕГЭ  и сравнивания их с рекомендуемыми таймингами. Поддерживается работа с пробниками по математике (профильного уровня) и информатике.
+  
+  //Поддерживается как решение только задач первой части (1-23 задания), так и полное решение пробника (1-27).
+  //Все данные отправляются на свой сервер и записываются в БД.
   
   $type = '';
   
@@ -27,19 +27,16 @@
   $size   = 1;
   $part_2 = 1;
   $part_2_diff = 1;
-  $current_timing = 1;
   
   if     ($type === 'inf') {
     $size = 28;
     $part_2 = 23;
     $part_2_diff = 90.0;
-    $current_timing = $timing_eth_inf["$i"];
   }
   else if($type === 'math') {
     $size = 20;
     $part_2 = 12;
     $part_2_diff = 55.0;
-    $current_timing = $timing_eth_math["$i"];
   }
   
   $query_create_inf_part2 = '';
@@ -189,22 +186,26 @@
   $query_2 = '';
   $query_3 = '';
   
+  $timing_eth = [];
+  
   if     ($type === 'inf') {
     $query_create = $query_create_inf;
     $query_2      = $query_2_inf;
     $query_3      = $query_3_inf;
+    $timing_eth   = $timing_eth_inf;
   }
   else if($type === 'math') {
     $query_create = $query_create_math;
     $query_2      = $query_2_math;
     $query_3      = $query_3_math;
+    $timing_eth   = $timing_eth_math;
   }
   
   for($i = 1; $i < $size; $i++) {
     if(isset($_GET["$i"])) {
       $timing_i = $_GET["$i"];
       if(is_numeric($timing_i)) {
-        $diff_i = round($timing_i - $current_timing,  2);
+        $diff_i = round($timing_i - $timing_eth["$i"],  2);
         if($i > $part_2 && !$need_part_2) $diff_i = 0.0;
         $query_2 .= ", '$timing_i'";
         $query_3 .= ", '$diff_i'";
